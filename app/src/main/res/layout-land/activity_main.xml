@@ -9,9 +9,9 @@
 
     <com.wjw.danma.DanMuView
         android:id="@+id/danMuView"
+        android:layout_marginTop="20dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -20,22 +20,12 @@
         android:id="@+id/btn_startOrStop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="startDanMu"
-        android:text="启动弹幕"
+        android:onClick="startOrStopDanMu"
+        android:text="停止弹幕"
         android:layout_marginTop="100dp"
         app:layout_constraintTop_toBottomOf="@id/danMuView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/btn_stop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="停止弹幕"
-        android:onClick="stopDanMu"
-        android:layout_marginTop="20dp"
-        app:layout_constraintTop_toBottomOf="@id/btn_startOrStop"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.2"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
@@ -44,10 +34,23 @@
         android:layout_height="wrap_content"
         android:text="清理弹幕"
         android:onClick="clearDanMu"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="100dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_stop" />
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintTop_toBottomOf="@+id/danMuView" />
+
+    <Button
+        android:id="@+id/btn_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="添加弹幕"
+        android:onClick="addDanMu"
+        android:layout_marginTop="100dp"
+        app:layout_constraintTop_toBottomOf="@id/danMuView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="0.8"/>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
