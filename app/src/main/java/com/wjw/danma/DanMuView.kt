@@ -72,9 +72,9 @@ class DanMuView @JvmOverloads constructor(
      * @param contentList 弹幕数据
      */
     @SuppressLint("ClickableViewAccessibility")
-    fun setModels(contentList: MutableList<String>, startFromEnd: Boolean = true) {
+    fun setModels(contentList: MutableList<String>, startFromEnd: Boolean = true ,isDeleteMode: Boolean = false) {
         if (contentList.isEmpty()) return
-        val viewAdapter = BarrageAdapter(contentList, mRow, startFromEnd, context, this)
+        val viewAdapter = BarrageAdapter(contentList, mRow, startFromEnd, context, this,isDeleteMode)
         rvDanMu?.run {
             layoutManager = StaggeredGridLayoutManager(mRow, StaggeredGridLayoutManager.HORIZONTAL)
             adapter = viewAdapter
@@ -131,11 +131,11 @@ class DanMuView @JvmOverloads constructor(
         private val row: Int,
         private val startFromEnd: Boolean,
         private val context: Context,
-        private val danMuView: DanMuView
+        private val danMuView: DanMuView,
+        var isDeleteMode :Boolean = false
     ) :
         RecyclerView.Adapter<BarrageAdapter.ViewDataHolder>(){
         private var highlightPosition: Int = -1 // 记录需要标识的弹幕位置
-        var isDeleteMode = false // 是否处于删除模式
         var danMuRepository = DanMuRepository(context)
         class ViewDataHolder(view: View):RecyclerView.ViewHolder(view){
             val textView: TextView = view.findViewById(R.id.tvText)
@@ -205,7 +205,7 @@ class DanMuView @JvmOverloads constructor(
                                 Toast.makeText(context, "弹幕列表为清空，已生成示例弹幕", Toast.LENGTH_SHORT).show()
                                 danMuView.postDelayed({
                                     val sampleDanMu = List(50) { "我是一个示例弹幕 $it" }
-                                    danMuView.setModels(sampleDanMu.toMutableList())
+                                    danMuView.setModels(sampleDanMu.toMutableList(),isDeleteMode = true)
                                 },1000)
                             }
                         }

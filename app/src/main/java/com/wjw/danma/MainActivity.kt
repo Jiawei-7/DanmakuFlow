@@ -29,11 +29,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var danMuRepository: DanMuRepository
     private lateinit var inputDialog: InputDialog
     private lateinit var sharedPreferences: SharedPreferences
-    private lateinit var redSeekBar : SeekBar
-    private lateinit var greenSeekBar : SeekBar
-    private lateinit var blueSeekBar : SeekBar
+    private lateinit var redSeekBar: SeekBar
+    private lateinit var greenSeekBar: SeekBar
+    private lateinit var blueSeekBar: SeekBar
     private lateinit var spinnerRowCount: Spinner
-    private lateinit var fontSizeSpinner : Spinner
+    private lateinit var fontSizeSpinner: Spinner
     val colorValue = ColorValue()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,9 +53,9 @@ class MainActivity : AppCompatActivity() {
                         or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 )
         initSeekBar()
-        initData()
         initRowSpinner()
         initSizeSpinner()
+        initData()
         initSetting()
     }
 
@@ -175,7 +175,7 @@ class MainActivity : AppCompatActivity() {
     private fun initData() {
         val danMuList = danMuRepository.getAllDanMu()
         if (danMuList.isNotEmpty()) {
-            mDanMuView.setRow(3)
+            mDanMuView.setRow(spinnerRowCount.selectedItemPosition + 1)
             mDanMuView.setModels(danMuList.toMutableList())
         } else {
             Toast.makeText(this, "弹幕列表为空，已生成示例弹幕", Toast.LENGTH_SHORT).show()
@@ -183,7 +183,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initSetting(){
+    private fun initSetting() {
         sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
         val rowCount = sharedPreferences.getInt("rowCount", 5)
         val fontSize = sharedPreferences.getInt("fontSize", 16)
@@ -197,16 +197,18 @@ class MainActivity : AppCompatActivity() {
         greenSeekBar.progress = green
         blueSeekBar.progress = blue
         spinnerRowCount.setSelection(rowCount - 1)
-        fontSizeSpinner.setSelection(when (fontSize) {
-            12 -> 0
-            16 -> 1
-            else -> 2
-        })
+        fontSizeSpinner.setSelection(
+            when (fontSize) {
+                12 -> 0
+                16 -> 1
+                else -> 2
+            }
+        )
     }
 
     private fun generateSampleDanMu() {
         val sampleDanMu = List(50) { "我是一个示例弹幕 $it" }
-        mDanMuView.setRow(3)
+        mDanMuView.setRow(spinnerRowCount.selectedItemPosition + 1)
         mDanMuView.setModels(sampleDanMu.toMutableList())
     }
 
