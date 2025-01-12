@@ -3,18 +3,122 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
+    android:background="@color/white"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
     <com.wjw.danma.DanMuView
         android:id="@+id/danMuView"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="10dp"
+        android:background="@null"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="红"
+        app:layout_constraintEnd_toStartOf="@id/redSeekBar"
+        app:layout_constraintTop_toTopOf="@id/redSeekBar"
+        app:layout_constraintBottom_toBottomOf="@id/redSeekBar"/>
+
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/redSeekBar"
+        android:progress="255"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.2"
+        app:layout_constraintTop_toBottomOf="@id/danMuView"
+        android:layout_marginTop="10dp"
+        android:max="255" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="绿"
+        app:layout_constraintEnd_toStartOf="@id/greenSeekBar"
+        app:layout_constraintTop_toTopOf="@id/greenSeekBar"
+        app:layout_constraintBottom_toBottomOf="@id/greenSeekBar"/>
+
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/greenSeekBar"
+        android:progress="235"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintTop_toBottomOf="@id/danMuView"
+        android:layout_marginTop="10dp"
+        android:max="255" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="蓝"
+        app:layout_constraintEnd_toStartOf="@id/blueSeekBar"
+        app:layout_constraintTop_toTopOf="@id/blueSeekBar"
+        app:layout_constraintBottom_toBottomOf="@id/blueSeekBar"/>
+
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/blueSeekBar"
+        android:progress="59"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintHorizontal_bias="0.8"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/danMuView"
+        android:layout_marginTop="10dp"
+        android:max="255" />
+
+    <TextView
+        android:id="@+id/tv_row_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        app:layout_constraintEnd_toStartOf="@id/spinner_row_count"
+        app:layout_constraintTop_toTopOf="@id/spinner_row_count"
+        app:layout_constraintBottom_toBottomOf="@id/spinner_row_count"
+        android:text="行数"/>
+
+    <Spinner
+        android:id="@+id/spinner_row_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.33"
+        app:layout_constraintTop_toBottomOf="@id/redSeekBar" />
+
+    <TextView
+        android:id="@+id/tv_text_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        app:layout_constraintEnd_toStartOf="@id/spinner_text_size"
+        app:layout_constraintTop_toTopOf="@id/spinner_text_size"
+        app:layout_constraintBottom_toBottomOf="@id/spinner_text_size"
+        android:text="字体"/>
+
+    <Spinner
+        android:id="@+id/spinner_text_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:entries="@array/font_size_options"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.66"
+        app:layout_constraintTop_toBottomOf="@id/redSeekBar" />
+
 
     <Button
         android:id="@+id/btn_startOrStop"
@@ -22,23 +126,23 @@
         android:layout_height="wrap_content"
         android:onClick="startOrStopDanMu"
         android:text="停止弹幕"
-        android:layout_marginTop="100dp"
-        app:layout_constraintTop_toBottomOf="@id/danMuView"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/spinner_text_size"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.2"
+        app:layout_constraintHorizontal_bias="0.21"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
         android:id="@+id/btn_clear"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="清理弹幕"
+        android:text="清空弹幕"
         android:onClick="clearDanMu"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintTop_toBottomOf="@+id/danMuView" />
+        app:layout_constraintHorizontal_bias="0.41"
+        app:layout_constraintTop_toBottomOf="@+id/spinner_text_size" />
 
     <Button
         android:id="@+id/btn_add"
@@ -46,11 +150,23 @@
         android:layout_height="wrap_content"
         android:text="添加弹幕"
         android:onClick="addDanMu"
-        android:layout_marginTop="100dp"
-        app:layout_constraintTop_toBottomOf="@id/danMuView"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/spinner_text_size"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintHorizontal_bias="0.8"/>
+        app:layout_constraintHorizontal_bias="0.61"/>
+
+    <Button
+        android:id="@+id/btn_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="deleteDanMu"
+        android:text="删除弹幕"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/spinner_text_size"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.81"
+        app:layout_constraintStart_toStartOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

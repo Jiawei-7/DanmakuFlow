@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">DanmakuFlow</string>
+    <string-array name="font_size_options">
+        <item>小</item>
+        <item>中</item>
+        <item>大</item>
+    </string-array>
 </resources>

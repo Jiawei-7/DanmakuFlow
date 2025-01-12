@@ -2,19 +2,23 @@ package com.wjw.danma
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.size
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.wjw.danma.bean.ColorValue
+import com.wjw.danma.database.DanMuRepository
 import com.wjw.danma.util.DpUtil
 
 class DanMuView @JvmOverloads constructor(
@@ -31,6 +35,8 @@ class DanMuView @JvmOverloads constructor(
     private var mRow: Int = 1//弹行数
     var rvDanMu: RecyclerView? = null
     private var isPlaying = false
+    var size = 16f
+    var colorValue = ColorValue(255,235,59)
     private val slideRunnable = object : Runnable {
         override fun run() {
             rvDanMu?.let {
@@ -66,13 +72,13 @@ class DanMuView @JvmOverloads constructor(
      * @param contentList 弹幕数据
      */
     @SuppressLint("ClickableViewAccessibility")
-    fun setModels(contentList: MutableList<String>, startFromEnd:Boolean = true){
+    fun setModels(contentList: MutableList<String>, startFromEnd: Boolean = true) {
         if (contentList.isEmpty()) return
-        val viewAdapter = BarrageAdapter(contentList,mRow, startFromEnd)
+        val viewAdapter = BarrageAdapter(contentList, mRow, startFromEnd, context, this)
         rvDanMu?.run {
             layoutManager = StaggeredGridLayoutManager(mRow, StaggeredGridLayoutManager.HORIZONTAL)
             adapter = viewAdapter
-            setOnTouchListener { _,_ -> true}
+            setOnTouchListener { _, _ -> true }
         }
     }
 
@@ -110,6 +116,11 @@ class DanMuView @JvmOverloads constructor(
         rvDanMu?.scrollToPosition(0)
     }
 
+    fun setDeleteMode(enabled: Boolean) {
+        val adapter = rvDanMu?.adapter as? BarrageAdapter
+        adapter?.setDelete(enabled)
+    }
+
 
     fun getAdapter(): BarrageAdapter {
         return (rvDanMu?.adapter as BarrageAdapter?)!!
@@ -118,10 +129,14 @@ class DanMuView @JvmOverloads constructor(
     class BarrageAdapter(
         private val dataList: MutableList<String>,
         private val row: Int,
-        private val startFromEnd: Boolean
+        private val startFromEnd: Boolean,
+        private val context: Context,
+        private val danMuView: DanMuView
     ) :
         RecyclerView.Adapter<BarrageAdapter.ViewDataHolder>(){
-        private var highlightPosition: Int? = null // 记录需要标识的弹幕位置
+        private var highlightPosition: Int = -1 // 记录需要标识的弹幕位置
+        var isDeleteMode = false // 是否处于删除模式
+        var danMuRepository = DanMuRepository(context)
         class ViewDataHolder(view: View):RecyclerView.ViewHolder(view){
             val textView: TextView = view.findViewById(R.id.tvText)
         }
@@ -147,19 +162,17 @@ class DanMuView @JvmOverloads constructor(
         override fun onBindViewHolder(holder: ViewDataHolder, position: Int) {
             if (dataList.isEmpty()) return
             holder.textView.run {
+                textSize = danMuView.size
+                setTextColor(Color.rgb(danMuView.colorValue.red,danMuView.colorValue.green,danMuView.colorValue.blue))
                 val params = layoutParams
                 if(startFromEnd){
                     if (position < row){
                         val screenWidth = DpUtil.getScreenWidthInDp(context)
-                        when(position){
-                            1 -> params.width = screenWidth.toInt() + DpUtil.dp2px(context,30f)
-                            2 -> params.width = screenWidth.toInt() + DpUtil.dp2px(context,10f)
-                            else -> params.width = ViewGroup.LayoutParams.WRAP_CONTENT
-                        }
+                        params.width = ViewGroup.LayoutParams.WRAP_CONTENT
                         visibility = VISIBLE
                         text = dataList[position % dataList.size]
                     } else{
-                        val realIndex = if (position - row > 0) position - row else 0
+                        val realIndex = if (position - row > 0) position else 0
                         val textStr = dataList[realIndex % dataList.size]
                         params.width = ViewGroup.LayoutParams.WRAP_CONTENT
                         visibility = if(textStr.isNotEmpty()) VISIBLE else GONE
@@ -172,21 +185,52 @@ class DanMuView @JvmOverloads constructor(
                     text = textStr
                 }
                 // 判断是否需要高亮显示
-                if (position == highlightPosition) {
+                if (position % dataList.size == highlightPosition && highlightPosition >=0) {
                     setBackgroundResource(R.drawable.bg_highlight) // 设置带方框的背景
                 } else {
-                    setBackgroundResource(R.drawable.rounded_bg) // 恢复默认背景
+                    setBackgroundResource(R.color.white) // 恢复默认背景
                 }
                 Log.d("HighlightDebug", "Current position: $position, Highlight position: $highlightPosition")
+                Log.d("HighlightDebug", "Current list: $dataList")
+                Log.d("HighlightDebug", "Current text: $text")
+
+                setOnClickListener {
+                    if (isDeleteMode) {
+                        Toast.makeText(context, "删除了$text", Toast.LENGTH_SHORT).show()
+                        var realPosition = position % dataList.size
+                        if (dataList.size>0){
+                            danMuRepository.deleteDanMu(dataList[realPosition])
+                            dataList.removeAt(realPosition)
+                            if (dataList.isEmpty()){
+                                Toast.makeText(context, "弹幕列表为清空，已生成示例弹幕", Toast.LENGTH_SHORT).show()
+                                danMuView.postDelayed({
+                                    val sampleDanMu = List(50) { "我是一个示例弹幕 $it" }
+                                    danMuView.setModels(sampleDanMu.toMutableList())
+                                },1000)
+                            }
+                        }
+                        while (realPosition<position&&dataList.size>0){
+                            notifyItemRemoved(realPosition)
+                            notifyItemRangeChanged(realPosition, dataList.size)
+                            realPosition+=dataList.size
+                        }
+                    }
+                }
             }
         }
 
         // 设置需要高亮的弹幕位置
         fun highlightPosition(position: Int) {
-            if (position >= 0){
-                highlightPosition = position
+            highlightPosition = position
+            if (position>=0){
                 notifyItemChanged(position)
             }
+        }
+
+        @SuppressLint("NotifyDataSetChanged")
+        fun setDelete(enabled: Boolean) {
+            isDeleteMode = enabled
+            notifyDataSetChanged()
         }
     }
 

@@ -41,4 +41,18 @@ class DanMuRepository(context: Context) {
         db.delete(DanMuDatabaseHelper.TABLE_NAME, null, null)
         db.close()
     }
+
+    fun deleteDanMu(content: String): Boolean {
+        val db = dbHelper.writableDatabase
+        // 删除条件：匹配 content 字段
+        val rowsDeleted = db.delete(
+            DanMuDatabaseHelper.TABLE_NAME,
+            "${DanMuDatabaseHelper.COLUMN_CONTENT} = ?",
+            arrayOf(content)
+        )
+        db.close()
+        // 返回是否成功删除
+        return rowsDeleted > 0
+    }
+
 }

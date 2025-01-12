@@ -1,26 +1,40 @@
 package com.wjw.danma
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
 import android.view.View
-import android.view.WindowManager
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.wjw.danma.bean.ColorValue
 import com.wjw.danma.database.DanMuRepository
 import com.wjw.danma.util.InputDialog
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mDanMuView: DanMuView
     private lateinit var mStartOrStopButton: Button
     private lateinit var danMuRepository: DanMuRepository
     private lateinit var inputDialog: InputDialog
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var redSeekBar : SeekBar
+    private lateinit var greenSeekBar : SeekBar
+    private lateinit var blueSeekBar : SeekBar
+    private lateinit var spinnerRowCount: Spinner
+    private lateinit var fontSizeSpinner : Spinner
+    val colorValue = ColorValue()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -38,7 +52,124 @@ class MainActivity : AppCompatActivity() {
                         or View.SYSTEM_UI_FLAG_FULLSCREEN
                         or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 )
+        initSeekBar()
         initData()
+        initRowSpinner()
+        initSizeSpinner()
+        initSetting()
+    }
+
+    private fun initSeekBar() {
+        redSeekBar = findViewById<SeekBar>(R.id.redSeekBar)
+        greenSeekBar = findViewById<SeekBar>(R.id.greenSeekBar)
+        blueSeekBar = findViewById<SeekBar>(R.id.blueSeekBar)
+
+        // 设置 SeekBar 改变监听器
+        redSeekBar.setOnSeekBarChangeListener(ColorChangeListener())
+        greenSeekBar.setOnSeekBarChangeListener(ColorChangeListener())
+        blueSeekBar.setOnSeekBarChangeListener(ColorChangeListener())
+    }
+
+
+    private inner class ColorChangeListener : OnSeekBarChangeListener {
+        override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+            when (seekBar.id) {
+                R.id.redSeekBar -> colorValue.red = progress
+                R.id.greenSeekBar -> colorValue.green = progress
+                R.id.blueSeekBar -> colorValue.blue = progress
+            }
+            updateColorPreview()
+        }
+
+        private fun updateColorPreview() {
+            mDanMuView.colorValue = colorValue
+            val editor = sharedPreferences.edit()
+            editor.putInt("red", colorValue.red)
+            editor.putInt("green", colorValue.green)
+            editor.putInt("blue", colorValue.blue)
+            editor.apply()
+        }
+
+        override fun onStartTrackingTouch(seekBar: SeekBar) {}
+        override fun onStopTrackingTouch(seekBar: SeekBar) {}
+    }
+
+    private fun initRowSpinner() {
+        // 初始化 Spinner
+        spinnerRowCount = findViewById(R.id.spinner_row_count)
+        val rowOptions = (1..5).map { "$it 行" } // 生成选项文本
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, rowOptions)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerRowCount.adapter = adapter
+
+        // 添加选择监听器
+        spinnerRowCount.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                val selectedRow = position + 1 // 行数
+                mDanMuView.setRow(selectedRow) // 设置弹幕行数
+                val editor = sharedPreferences.edit()
+                editor.putInt("rowCount", selectedRow)
+                editor.apply()
+                val danMuList = danMuRepository.getAllDanMu()
+                if (danMuList.isNotEmpty()) {
+                    mDanMuView.setRow(selectedRow)
+                    mDanMuView.setModels(danMuList.toMutableList())
+                } else {
+                    generateSampleDanMu()
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // 默认行为：不做处理
+            }
+        }
+    }
+
+    private fun initSizeSpinner() {
+        fontSizeSpinner = findViewById(R.id.spinner_text_size)
+        fontSizeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View,
+                position: Int,
+                id: Long
+            ) {
+                val editor = sharedPreferences.edit()
+                when (position) {
+                    0 -> {
+                        mDanMuView.size = 12f
+                        editor.putInt("fontSize", 12)
+                    }
+
+                    1 -> {
+                        mDanMuView.size = 16f
+                        editor.putInt("fontSize", 16)
+                    }
+
+                    2 -> {
+                        mDanMuView.size = 20f
+                        editor.putInt("fontSize", 20)
+                    }
+                }
+                editor.apply()
+                val danMuList = danMuRepository.getAllDanMu()
+                if (danMuList.isNotEmpty()) {
+                    mDanMuView.setRow(spinnerRowCount.selectedItemPosition + 1)
+                    mDanMuView.setModels(danMuList.toMutableList())
+                } else {
+                    generateSampleDanMu()
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // 默认情况下，无操作
+            }
+        }
     }
 
     private fun initData() {
@@ -50,6 +181,27 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "弹幕列表为空，已生成示例弹幕", Toast.LENGTH_SHORT).show()
             generateSampleDanMu()
         }
+    }
+
+    private fun initSetting(){
+        sharedPreferences = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+        val rowCount = sharedPreferences.getInt("rowCount", 5)
+        val fontSize = sharedPreferences.getInt("fontSize", 16)
+        val red = sharedPreferences.getInt("red", 255)
+        val green = sharedPreferences.getInt("green", 235)
+        val blue = sharedPreferences.getInt("blue", 59)
+        mDanMuView.setRow(rowCount)
+        mDanMuView.size = fontSize.toFloat()
+        mDanMuView.colorValue = ColorValue(red, green, blue)
+        redSeekBar.progress = red
+        greenSeekBar.progress = green
+        blueSeekBar.progress = blue
+        spinnerRowCount.setSelection(rowCount - 1)
+        fontSizeSpinner.setSelection(when (fontSize) {
+            12 -> 0
+            16 -> 1
+            else -> 2
+        })
     }
 
     private fun generateSampleDanMu() {
@@ -71,6 +223,7 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("NotifyDataSetChanged")
     fun clearDanMu(view: View) {
+        danMuRepository.clearAllDanMu()
         if (mDanMuView.isPlaying()) {
             mStartOrStopButton.text = "启动弹幕"
         } else {
@@ -92,10 +245,14 @@ class MainActivity : AppCompatActivity() {
 
     fun addDanMu(view: View) {
         inputDialog = InputDialog(this)
-        inputDialog.onClickBottomListener=object : InputDialog.OnClickBottomListener{
+        inputDialog.onClickBottomListener = object : InputDialog.OnClickBottomListener {
             override fun onPositiveClick() {
-                if (inputDialog.getDanMu().isNotEmpty()){
-                    val danMu=inputDialog.getDanMu()
+                if (inputDialog.getDanMu().isNotEmpty()) {
+                    val danMuList = danMuRepository.getAllDanMu()
+                    if (danMuList.isEmpty()) {
+                        mDanMuView.clearModels()
+                    }
+                    val danMu = inputDialog.getDanMu()
                     insertDanMu(danMu)
                     inputDialog.dismiss()
                 } else {
@@ -127,7 +284,14 @@ class MainActivity : AppCompatActivity() {
         val lastVisiblePosition = lastVisibleItemPositions?.maxOrNull() ?: -1
 
         // 计算插入位置，确保不越界
-        val insertPosition = if (lastVisiblePosition + 1 >= currentList.size) currentList.size else lastVisiblePosition + 1
+        val insertPosition = if (lastVisiblePosition + 1 >= currentList.size) {
+            if (currentList.isEmpty()) {
+                startDanMu(mStartOrStopButton)
+                0
+            } else {
+                lastVisiblePosition % currentList.size
+            }
+        } else lastVisiblePosition
 
         // 插入数据到指定位置
         currentList.add(insertPosition, content)
@@ -141,9 +305,37 @@ class MainActivity : AppCompatActivity() {
         // 延时移除高亮标识
         mDanMuView.postDelayed({
             mDanMuView.getAdapter().highlightPosition(-1) // 恢复默认样式
-        }, 3000) // 高亮持续 3 秒
+        }, 5000) // 高亮持续 3 秒
     }
 
-
+    fun deleteDanMu(view: View) {
+        val isDeleteMode = mDanMuView.getAdapter().isDeleteMode // 当前删除模式状态
+        val startOrStopBtn = findViewById<Button>(R.id.btn_startOrStop)
+        val clearBtn = findViewById<Button>(R.id.btn_clear)
+        val addBtn = findViewById<Button>(R.id.btn_add)
+        if (isDeleteMode) {
+            // 退出删除模式
+            mDanMuView.setDeleteMode(false)
+            startOrStopBtn.alpha = 1f
+            clearBtn.alpha = 1f
+            addBtn.alpha = 1f
+            startOrStopBtn.isClickable = true
+            clearBtn.isClickable = true
+            addBtn.isClickable = true
+            (view as Button).text = "删除弹幕"
+            Toast.makeText(this, "退出删除模式", Toast.LENGTH_SHORT).show()
+        } else {
+            // 进入删除模式
+            mDanMuView.setDeleteMode(true)
+            startOrStopBtn.alpha = 0.3f
+            clearBtn.alpha = 0.3f
+            addBtn.alpha = 0.3f
+            startOrStopBtn.isClickable = false
+            clearBtn.isClickable = false
+            addBtn.isClickable = false
+            (view as Button).text = "取消删除"
+            Toast.makeText(this, "进入删除模式，点击弹幕项以删除", Toast.LENGTH_SHORT).show()
+        }
+    }
 
 }
